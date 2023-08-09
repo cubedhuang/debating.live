@@ -15,27 +15,34 @@
 	}
 
 	.button {
-		@apply bg-white px-4 py-2 border-2 font-semibold rounded-xl text-center transition;
+		@apply bg-white px-4 py-2 border-2 font-semibold rounded-xl text-center transition outline-none
+			hocus-visible:text-white
+			disabled:!bg-gray-100 disabled:!text-gray-400 disabled:border-gray-200;
 	}
 
 	.button-blue {
-		@apply border-blue-500 text-blue-500 hocus-visible:bg-blue-500 hocus-visible:text-white;
+		@apply border-blue-500 text-blue-500
+			hocus-visible:bg-blue-500;
 	}
 
 	.button-red {
-		@apply border-red-500 text-red-500 hocus-visible:bg-red-500 hocus-visible:text-white;
+		@apply border-red-500 text-red-500
+			hocus-visible:bg-red-500;
 	}
 
 	.button-green {
-		@apply border-green-500 text-green-500 hocus-visible:bg-green-500 hocus-visible:text-white;
+		@apply border-green-500 text-green-500
+			hocus-visible:bg-green-500;
 	}
 
 	.button-purple {
-		@apply border-purple-500 text-purple-500 hocus-visible:bg-purple-500 hocus-visible:text-white;
+		@apply border-purple-500 text-purple-500
+			hocus-visible:bg-purple-500;
 	}
 
 	.button-gray {
-		@apply border-gray-500 text-gray-500 hocus-visible:bg-gray-500 hocus-visible:text-white;
+		@apply border-gray-500 text-gray-500
+			hocus-visible:bg-gray-500;
 	}
 
 	.focus-outline {
