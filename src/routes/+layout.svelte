@@ -1,5 +1,24 @@
 <script>
+	import { io } from 'socket.io-client';
+	import { onMount } from 'svelte';
 	import '../app.postcss';
+	import { socket } from '$lib/stores';
+
+	onMount(() => {
+		$socket = io();
+
+		$socket.on('connect', () => {
+			console.debug('connected to websocket');
+		});
+
+		$socket.on('disconnect', () => {
+			console.debug('disconnected from websocket');
+		});
+
+		$socket.on('message', data => {
+			console.debug(data);
+		});
+	});
 </script>
 
 <svelte:head>

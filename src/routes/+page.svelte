@@ -1,30 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-
-	onMount(() => {
-		const ws = new WebSocket('ws://localhost:443');
-
-		ws.addEventListener('open', () => {
-			console.log('connected');
-			ws.send('hello');
-		});
-
-		ws.addEventListener('message', event => {
-			console.log('Message from server ', event.data);
-		});
-
-		ws.addEventListener('close', () => {
-			console.log('disconnected');
-		});
-
-		ws.addEventListener('error', err => {
-			console.log('error', err);
-		});
-
-		return () => {
-			ws.close();
-		};
-	});
+	import { io } from 'socket.io-client';
 </script>
 
 <h1>debating.live</h1>

@@ -4,5 +4,5 @@ import { defineConfig } from 'vite';
 import { wss } from './src/lib/server';
 
 export default defineConfig({
-	plugins: [wss, sveltekit()]
+	plugins: [sveltekit(), wss]
 });
