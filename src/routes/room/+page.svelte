@@ -7,7 +7,7 @@
 
 <form
 	on:submit|preventDefault
-	class="mt-12 max-w-sm mx-auto flex flex-col gap-2 text-center"
+	class="mt-12 max-w-sm mx-auto flex flex-col gap-2"
 >
 	<input
 		type="text"

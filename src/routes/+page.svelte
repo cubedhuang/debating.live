@@ -7,5 +7,5 @@
 
 	<button class="button button-purple"> Settings </button>
 
-	<button class="button button-gray"> About </button>
+	<a href="/about" class="button button-gray"> About </a>
 </div>
