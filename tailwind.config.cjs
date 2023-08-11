@@ -8,8 +8,7 @@ const config = {
 	theme: {
 		extend: {
 			fontFamily: {
-				sans: ['Inter', ...defaultTheme.fontFamily.sans],
-				display: ["'Crimson Pro'", ...defaultTheme.fontFamily.serif]
+				sans: ['Lexend', ...defaultTheme.fontFamily.sans]
 			}
 		}
 	},
