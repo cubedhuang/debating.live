@@ -7,7 +7,7 @@
 
 <form
 	on:submit|preventDefault
-	class="mt-12 max-w-sm mx-auto flex flex-col gap-2"
+	class="mt-12 w-full max-w-xs mx-auto flex flex-col gap-2"
 >
 	<input
 		type="text"
@@ -25,7 +25,7 @@
 			type="text"
 			placeholder="Room Code"
 			bind:value={roomCode}
-			class="flex-1 bg-white px-4 py-2 border-2 text-blue-500 text-center rounded-xl
+			class="flex-1 bg-white px-4 py-2 border-2 text-blue-500 text-center rounded-xl font-mono font-semibold
 				focus:border-blue-500 transition outline-none"
 			required
 			maxlength="4"

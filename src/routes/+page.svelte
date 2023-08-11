@@ -1,6 +1,6 @@
 <h1>debating.live</h1>
 
-<div class="mt-12 max-w-sm mx-auto flex flex-col gap-2">
+<div class="mt-12 w-full max-w-xs mx-auto flex flex-col gap-2">
 	<a href="/create" class="button button-green"> Create Room </a>
 
 	<a href="/room" class="button button-blue"> Join Room </a>

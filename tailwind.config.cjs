@@ -8,7 +8,8 @@ const config = {
 	theme: {
 		extend: {
 			fontFamily: {
-				sans: ['Lexend', ...defaultTheme.fontFamily.sans]
+				sans: ['Lexend', ...defaultTheme.fontFamily.sans],
+				mono: ['"Red Hat Mono"', ...defaultTheme.fontFamily.mono]
 			}
 		}
 	},
