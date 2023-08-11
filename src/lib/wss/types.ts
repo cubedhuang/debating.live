@@ -4,6 +4,8 @@ export enum Stage {
 	End
 }
 
+export enum Speech {}
+
 export type RoundState = {
 	stage: Stage;
 };

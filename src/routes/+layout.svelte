@@ -5,7 +5,9 @@
 	import { socket } from '$lib/stores';
 
 	onMount(() => {
-		$socket = io();
+		$socket = io({
+			transports: ['websocket']
+		});
 
 		$socket.on('connect', () => {
 			console.debug('connected to websocket');

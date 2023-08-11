@@ -1,8 +1,3 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import { io } from 'socket.io-client';
-</script>
-
 <h1>debating.live</h1>
 
 <div class="mt-12 max-w-sm mx-auto flex flex-col gap-2">
