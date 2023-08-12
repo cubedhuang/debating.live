@@ -23,5 +23,7 @@
 		</p>
 
 		<p class="mt-4">This project is currently a work in progress.</p>
+
+		<a href="/" class="mt-8 w-fit block mx-auto button button-gray">Home</a>
 	</div>
 </main>
