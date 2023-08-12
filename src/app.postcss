@@ -10,7 +10,11 @@
 
 @layer components {
 	.wrapper {
-		@apply mx-auto max-w-screen-lg px-8;
+		@apply min-h-screen flex flex-col justify-center py-20 px-8 lg:px-20;
+	}
+
+	.inputs {
+		@apply mt-12 w-full max-w-xs mx-auto flex flex-col gap-2;
 	}
 
 	.button {

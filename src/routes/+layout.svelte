@@ -34,8 +34,4 @@
 	/>
 </svelte:head>
 
-<div class="min-h-screen grid place-items-center py-20 px-8 lg:px-20">
-	<main class="flex flex-col justify-center h-full w-full max-w-screen-2xl">
-		<slot />
-	</main>
-</div>
+<slot />
