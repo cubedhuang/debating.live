@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import ArrowPathMini from '$lib/components/icons/ArrowPathMini.svelte';
 	import Backward from '$lib/components/icons/Backward.svelte';
 	import Forward from '$lib/components/icons/Forward.svelte';
+	import MinusSmallMini from '$lib/components/icons/MinusSmallMini.svelte';
+	import PlayMini from '$lib/components/icons/PlayMini.svelte';
+	import PlusSmallMini from '$lib/components/icons/PlusSmallMini.svelte';
 </script>
 
 <div
@@ -25,9 +29,57 @@
 			<div
 				class="flex-1 flex flex-col justify-center text-center bg-white border-2 rounded-xl p-8"
 			>
-				<h2 class="text-gray-500">2nd Rebuttal (Neg)</h2>
+				<h2 class="text-gray-500">2nd Rebuttal &middot; Neg</h2>
 
 				<p class="mt-2 text-5xl font-mono font-semibold">1:32</p>
+
+				<div class="mt-4 flex justify-center gap-2">
+					<button
+						class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition"
+					>
+						<PlayMini />
+					</button>
+
+					<button
+						class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition"
+					>
+						<ArrowPathMini />
+					</button>
+				</div>
+
+				<div class="mt-2 flex justify-center gap-2">
+					<button
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+					>
+						<PlusSmallMini />
+
+						1m
+					</button>
+
+					<button
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+					>
+						<PlusSmallMini />
+
+						10s
+					</button>
+
+					<button
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+					>
+						<MinusSmallMini />
+
+						10s
+					</button>
+
+					<button
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+					>
+						<MinusSmallMini />
+
+						1m
+					</button>
+				</div>
 			</div>
 
 			<div
