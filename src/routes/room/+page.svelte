@@ -6,10 +6,7 @@
 <main class="wrapper">
 	<h1>Joining Room</h1>
 
-	<form
-		on:submit|preventDefault
-		class="mt-12 w-full max-w-xs mx-auto flex flex-col gap-2"
-	>
+	<form on:submit|preventDefault class="inputs">
 		<input
 			type="text"
 			bind:value={name}
@@ -44,5 +41,7 @@
 				Join
 			</button>
 		</div>
+
+		<a href="/" class="mt-4 button button-gray">Back</a>
 	</form>
 </main>
