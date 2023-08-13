@@ -167,9 +167,9 @@
 				<h2 class="p-6 pb-2 text-gray-500 border-b-2">Activity</h2>
 
 				<div
-					class="mt-auto overflow-y-auto h-48 md:h-auto p-6 pt-0 flex flex-col gap-2 text-xs"
+					class="mt-auto overflow-y-auto h-48 md:h-auto p-6 flex flex-col gap-2 text-xs"
 				>
-					{#each { length: 30 } as _}
+					{#each { length: 10 } as _}
 						<p>
 							<span class="text-gray-500">
 								{new Date().toLocaleTimeString()}
