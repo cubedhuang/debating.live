@@ -6,10 +6,11 @@
 	import MinusSmallMini from '$lib/components/icons/MinusSmallMini.svelte';
 	import PlayMini from '$lib/components/icons/PlayMini.svelte';
 	import PlusSmallMini from '$lib/components/icons/PlusSmallMini.svelte';
+	import PrepTime from './PrepTime.svelte';
 </script>
 
 <div
-	class="md:h-screen px-8 lg:px-20 py-20 max-w-screen-2xl mx-auto flex flex-col"
+	class="md:h-screen px-8 lg:px-20 py-12 max-w-screen-2xl mx-auto flex flex-col"
 >
 	<div class="flex flex-wrap justify-between h-12">
 		<p>
@@ -41,7 +42,9 @@
 					</button>
 
 					<button
-						class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition"
+						class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
+							disabled:hover:border-gray-200 disabled:text-gray-500 disabled:bg-gray-100"
+						disabled
 					>
 						<ArrowPathMini />
 					</button>
@@ -57,7 +60,7 @@
 					</button>
 
 					<button
-						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 					>
 						<PlusSmallMini />
 
@@ -65,7 +68,7 @@
 					</button>
 
 					<button
-						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 					>
 						<MinusSmallMini />
 
@@ -73,7 +76,7 @@
 					</button>
 
 					<button
-						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+						class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 					>
 						<MinusSmallMini />
 
@@ -100,31 +103,14 @@
 				</button>
 			</div>
 
-			<div class="mt-8 gap-4 grid grid-cols-2">
-				<div class="bg-white border-2 rounded-xl p-6">
-					<h2 class="text-center text-gray-500">Aff Prep Time</h2>
-
-					<p
-						class="mt-2 text-3xl text-center font-mono font-semibold text-blue-500"
-					>
-						4:56
-					</p>
-				</div>
-
-				<div class="bg-white border-2 rounded-xl p-6">
-					<h2 class="text-center text-gray-500">Neg Prep Time</h2>
-
-					<p
-						class="mt-2 text-3xl text-center font-mono font-semibold text-red-500"
-					>
-						4:56
-					</p>
-				</div>
+			<div class="mt-8 gap-4 grid sm:grid-cols-2">
+				<PrepTime side="Aff" />
+				<PrepTime side="Neg" />
 			</div>
 		</div>
 
 		<div
-			class="shrink-0 md:w-56 lg:w-64 xl:w-80 grid sidebar md:max-h-[calc(100vh-13rem)] gap-8"
+			class="shrink-0 md:w-56 lg:w-64 xl:w-80 grid sidebar md:max-h-[calc(100vh-9rem)] gap-8"
 		>
 			<div class="bg-white border-2 rounded-xl p-6 overflow-y-auto">
 				<h2 class="text-gray-500">Judges &mdash; 1</h2>
