@@ -1,5 +1,6 @@
 export type Session = {
-	id: string;
+	sessionId: string;
+	userId: string;
 	displayName: string;
 	roomId?: string;
 };
@@ -14,9 +15,7 @@ export type RoomInfo = {
 	actions: ActionData[];
 };
 
-export type PublicUserInfo = {
-	displayName: string;
-};
+export type PublicUserInfo = Omit<Session, 'sessionId'>;
 
 export type TimerType = 'main' | 'affPrep' | 'negPrep';
 

@@ -1,4 +1,4 @@
-import type { RoomInfo, Session } from '$lib/types';
+import type { PublicUserInfo, RoomInfo, Session } from '$lib/types';
 import { Server, Socket } from 'socket.io';
 
 import type {
@@ -25,6 +25,12 @@ export function createWss(server: import('node:http').Server) {
 	const sessions = new Map<string, Session>();
 	const rooms = new Map<string, RoomInfo>();
 
+	function publicUserInfo(session: Session): PublicUserInfo {
+		return Object.fromEntries(
+			Object.entries(session).filter(([key]) => key !== 'sessionId')
+		) as PublicUserInfo;
+	}
+
 	function addUserToRoom(
 		socket: Socket<
 			ClientToServerEvents,
@@ -34,13 +40,15 @@ export function createWss(server: import('node:http').Server) {
 		>,
 		room: RoomInfo
 	) {
-		const session = sessions.get(socket.data.id)!;
+		const session = sessions.get(socket.data.sessionId)!;
 
 		session.roomId = room.id;
 
-		if (!room.users.includes(session.id)) {
-			room.users.push(session.id);
-			room.userData[session.id] = sessions.get(session.id)!;
+		if (!room.users.includes(session.userId)) {
+			room.users.push(session.userId);
+			room.userData[session.userId] = publicUserInfo(
+				sessions.get(session.sessionId)!
+			);
 		}
 
 		socket.join(room.id);
@@ -53,7 +61,8 @@ export function createWss(server: import('node:http').Server) {
 			const session = sessions.get(sessionId);
 
 			if (session) {
-				socket.data.id = sessionId;
+				socket.data.sessionId = sessionId;
+				socket.data.userId = session.userId;
 				socket.data.displayName = session.displayName;
 				return next();
 			}
@@ -70,21 +79,20 @@ export function createWss(server: import('node:http').Server) {
 			return next(new Error('Invalid Display Name'));
 		}
 
-		socket.data.id = crypto.randomUUID();
+		socket.data.sessionId = crypto.randomUUID();
+		socket.data.userId = crypto.randomUUID();
 		socket.data.displayName = displayName;
 		next();
 	});
 
 	io.on('connection', socket => {
-		sessions.set(socket.data.id, {
-			id: socket.data.id,
+		sessions.set(socket.data.sessionId, {
+			sessionId: socket.data.sessionId,
+			userId: socket.data.userId,
 			displayName: socket.data.displayName
 		});
 
-		socket.emit('session', {
-			id: socket.data.id,
-			displayName: socket.data.displayName
-		});
+		socket.emit('session', sessions.get(socket.data.sessionId)!);
 
 		socket.on('disconnect', () => {
 			console.log(`User ${socket.id} disconnected`);
@@ -94,7 +102,7 @@ export function createWss(server: import('node:http').Server) {
 			const room: RoomInfo = {
 				id: createRoomId(),
 				name: roomName,
-				owner: socket.data.id,
+				owner: socket.data.userId,
 				users: [],
 				userData: {},
 				timers: {
@@ -143,7 +151,7 @@ export function createWss(server: import('node:http').Server) {
 		});
 
 		socket.on('roomAction', action => {
-			const session = sessions.get(socket.data.id)!;
+			const session = sessions.get(socket.data.sessionId)!;
 			if (!session.roomId) return;
 
 			const room = rooms.get(session.roomId)!;
@@ -172,7 +180,7 @@ export function createWss(server: import('node:http').Server) {
 			room.actions.push({
 				...action,
 				timestamp: Date.now(),
-				user: socket.data.id
+				user: session.userId
 			});
 
 			if (room.actions.length > 100) {

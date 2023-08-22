@@ -37,8 +37,8 @@
 		$socket.on('session', session => {
 			if (!$socket) return;
 
-			$socket.auth = { ...$socket.auth, sessionId: session.id };
-			$sessionId = session.id;
+			$socket.auth = { ...$socket.auth, sessionId: session.sessionId };
+			$sessionId = session.sessionId;
 			$displayName = session.displayName;
 			$roomId = session.roomId ?? '';
 

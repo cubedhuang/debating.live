@@ -88,9 +88,10 @@
 
 	let scrollableActivity: HTMLDivElement | null = null;
 
-	$: if ($currentRoom && scrollableActivity) {
+	$: if ($currentRoom) {
 		requestAnimationFrame(() => {
-			scrollableActivity!.scrollTop = scrollableActivity!.scrollHeight;
+			if (scrollableActivity)
+				scrollableActivity.scrollTop = scrollableActivity.scrollHeight;
 		});
 	}
 </script>
@@ -487,7 +488,7 @@
 								</span>
 
 								{#if action.type === 'timerDone'}
-									{timerTypeToName(action.timerType)} timer done
+									{timerTypeToName(action.timerType)} done
 								{:else if action.type === 'startTimer' || action.type === 'resetTimer' || action.type === 'pauseTimer'}
 									<span class="font-semibold">
 										{userIdToDisplayName(action.user)}
