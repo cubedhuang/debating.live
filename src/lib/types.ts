@@ -2,7 +2,6 @@ export type Session = {
 	sessionId: string;
 	userId: string;
 	displayName: string;
-	roomId?: string;
 };
 
 export type RoomInfo = {
@@ -32,4 +31,5 @@ export type Action =
 
 export type ActionData =
 	| (Action & { timestamp: number; user: string })
-	| { timestamp: number; type: 'timerDone'; timerType: TimerType };
+	| { timestamp: number; type: 'timerDone'; timerType: TimerType }
+	| { timestamp: number; type: 'userJoin'; user: string };

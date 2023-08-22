@@ -42,8 +42,6 @@ export function createWss(server: import('node:http').Server) {
 	) {
 		const session = sessions.get(socket.data.sessionId)!;
 
-		session.roomId = room.id;
-
 		if (!room.users.includes(session.userId)) {
 			room.users.push(session.userId);
 			room.userData[session.userId] = publicUserInfo(
@@ -145,16 +143,22 @@ export function createWss(server: import('node:http').Server) {
 
 			addUserToRoom(socket, room);
 
-			io.to(room.id).emit('roomUpdate', room);
+			const actionData = {
+				timestamp: Date.now(),
+				type: 'userJoin' as const,
+				user: socket.data.userId
+			};
+			room.actions.push(actionData);
+
+			io.to(room.id).emit('roomUpdate', room, actionData);
 
 			callback(room);
 		});
 
-		socket.on('roomAction', action => {
+		socket.on('roomAction', (roomId, action) => {
 			const session = sessions.get(socket.data.sessionId)!;
-			if (!session.roomId) return;
-
-			const room = rooms.get(session.roomId)!;
+			const room = rooms.get(roomId);
+			if (!room || !room.users.includes(session.userId)) return;
 
 			switch (action.type) {
 				case 'startTimer':
@@ -177,17 +181,18 @@ export function createWss(server: import('node:http').Server) {
 					break;
 			}
 
-			room.actions.push({
+			const actionData = {
 				...action,
 				timestamp: Date.now(),
 				user: session.userId
-			});
+			};
+			room.actions.push(actionData);
 
 			if (room.actions.length > 100) {
 				room.actions.splice(0, room.actions.length - 100);
 			}
 
-			io.to(session.roomId).emit('roomUpdate', room);
+			io.to(roomId).emit('roomUpdate', room, actionData);
 		});
 	});
 
@@ -198,13 +203,14 @@ export function createWss(server: import('node:http').Server) {
 					timer.secondsLeft = 0;
 					timer.active = false;
 
-					room.actions.push({
+					const actionData = {
 						timestamp: Date.now(),
-						type: 'timerDone',
+						type: 'timerDone' as const,
 						timerType: timer.type
-					});
+					};
+					room.actions.push(actionData);
 
-					io.to(room.id).emit('roomUpdate', room);
+					io.to(room.id).emit('roomUpdate', room, actionData);
 				} else if (timer.active) {
 					timer.secondsLeft -= 1;
 				}

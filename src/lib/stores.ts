@@ -49,13 +49,4 @@ export const socket = writable<Socket<
 > | null>(null);
 export const displayName = writable<string>('');
 export const sessionId = savedWritable<string>('sessionId', '');
-export const roomId = savedWritable<string>('roomId', '');
 export const currentRoom = writable<RoomInfo | null>(null);
-
-currentRoom.subscribe(room => {
-	if (room) {
-		roomId.set(room.id);
-	} else {
-		roomId.set('');
-	}
-});

@@ -2,14 +2,7 @@
 	import { io } from 'socket.io-client';
 	import { onMount } from 'svelte';
 	import '../app.postcss';
-	import {
-		currentRoom,
-		displayName,
-		roomId,
-		sessionId,
-		socket
-	} from '$lib/stores';
-	import { goto } from '$app/navigation';
+	import { currentRoom, displayName, sessionId, socket } from '$lib/stores';
 
 	onMount(() => {
 		$socket = io({
@@ -40,11 +33,6 @@
 			$socket.auth = { ...$socket.auth, sessionId: session.sessionId };
 			$sessionId = session.sessionId;
 			$displayName = session.displayName;
-			$roomId = session.roomId ?? '';
-
-			if (session.roomId) {
-				goto(`/room/${session.roomId}`);
-			}
 		});
 
 		$socket?.on('roomUpdate', room => {

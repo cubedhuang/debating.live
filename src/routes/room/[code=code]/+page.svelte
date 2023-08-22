@@ -27,7 +27,7 @@
 		display = Display.In;
 	}
 
-	$: if ($socket && $sessionId && !$currentRoom?.id) {
+	$: if ($socket && $sessionId && !$currentRoom?.id && !$socket.connected) {
 		$socket.connect().emit('joinRoom', $page.params.code, room => {
 			if (!room) {
 				goto('/');
@@ -88,12 +88,16 @@
 
 	let scrollableActivity: HTMLDivElement | null = null;
 
-	$: if ($currentRoom) {
-		requestAnimationFrame(() => {
-			if (scrollableActivity)
-				scrollableActivity.scrollTop = scrollableActivity.scrollHeight;
-		});
+	function scrollToBottom() {
+		if (scrollableActivity)
+			scrollableActivity.scrollTop = scrollableActivity.scrollHeight;
 	}
+
+	$: if ($currentRoom) {
+		requestAnimationFrame(() => scrollToBottom());
+	}
+
+	$: roomId = $currentRoom?.id ?? '';
 </script>
 
 {#if display === Display.Connect}
@@ -165,7 +169,7 @@
 							disabled={$currentRoom?.timers.main.secondsLeft ===
 								0}
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: $currentRoom?.timers.main.active
 										? 'pauseTimer'
 										: 'startTimer',
@@ -188,7 +192,7 @@
 								$currentRoom?.timers.main.totalSeconds &&
 								!$currentRoom?.timers.main.active}
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: 'resetTimer',
 									timerType: 'main'
 								});
@@ -198,11 +202,13 @@
 						</button>
 					</div>
 
-					<div class="mt-2 flex justify-center gap-2">
+					<div
+						class="mt-2 grid grid-cols-2 sm:flex justify-center gap-2"
+					>
 						<button
-							class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+							class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: 'addTime',
 									timerType: 'main',
 									seconds: 60
@@ -215,9 +221,9 @@
 						</button>
 
 						<button
-							class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+							class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: 'addTime',
 									timerType: 'main',
 									seconds: 10
@@ -230,9 +236,9 @@
 						</button>
 
 						<button
-							class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+							class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: 'addTime',
 									timerType: 'main',
 									seconds: -10
@@ -245,9 +251,9 @@
 						</button>
 
 						<button
-							class="flex items-center border-2 rounded-xl px-2 py-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+							class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 							on:click={() => {
-								$socket?.emit('roomAction', {
+								$socket?.emit('roomAction', roomId, {
 									type: 'addTime',
 									timerType: 'main',
 									seconds: -60
@@ -312,7 +318,7 @@
 									disabled={$currentRoom?.timers[timerType]
 										.secondsLeft === 0}
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: $currentRoom?.timers[
 												timerType
 											].active
@@ -339,7 +345,7 @@
 											.totalSeconds &&
 										!$currentRoom?.timers[timerType].active}
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: 'resetTimer',
 											timerType
 										});
@@ -353,7 +359,7 @@
 								<button
 									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: 'addTime',
 											timerType,
 											seconds: 60
@@ -366,7 +372,7 @@
 								<button
 									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: 'addTime',
 											timerType,
 											seconds: 10
@@ -379,7 +385,7 @@
 								<button
 									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: 'addTime',
 											timerType,
 											seconds: -10
@@ -392,7 +398,7 @@
 								<button
 									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
 									on:click={() => {
-										$socket?.emit('roomAction', {
+										$socket?.emit('roomAction', roomId, {
 											type: 'addTime',
 											timerType,
 											seconds: -60
@@ -468,16 +474,6 @@
 						bind:this={scrollableActivity}
 					>
 						{#each $currentRoom?.actions ?? [] as action}
-							<!-- <p>
-								<span class="text-gray-500">
-									{new Date().toLocaleTimeString()}
-								</span>
-
-								<span class="font-semibold">Daniel</span>
-
-								added 10 seconds to Aff Prep Time
-							</p> -->
-
 							<p>
 								<span
 									class="text-gray-500 font-mono font-semibold tracking-tighter inline-block mr-1"
@@ -512,6 +508,12 @@
 									{/if}
 
 									{timerTypeToName(action.timerType)}
+								{:else if action.type === 'userJoin'}
+									<span class="font-semibold">
+										{userIdToDisplayName(action.user)}
+									</span>
+
+									joined
 								{/if}
 							</p>
 						{/each}
