@@ -1,8 +1,15 @@
-<script>
+<script lang="ts">
 	import { io } from 'socket.io-client';
 	import { onMount } from 'svelte';
 	import '../app.postcss';
-	import { socket } from '$lib/stores';
+	import {
+		currentRoom,
+		displayName,
+		roomId,
+		sessionId,
+		socket
+	} from '$lib/stores';
+	import { goto } from '$app/navigation';
 
 	onMount(() => {
 		$socket = io({
@@ -10,17 +17,53 @@
 			autoConnect: false
 		});
 
+		console.log($socket, $sessionId);
+
+		if ($sessionId) {
+			$socket.auth = { sessionId: $sessionId };
+			$socket.connect();
+		}
+
 		$socket.on('connect', () => {
 			console.debug('connected to websocket');
+		});
+
+		$socket.on('connect_error', err => {
+			console.error('failed to connect to websocket', err);
 		});
 
 		$socket.on('disconnect', () => {
 			console.debug('disconnected from websocket');
 		});
 
-		$socket.onAny((...args) => {
-			console.debug('socket event:', args);
+		$socket.on('session', session => {
+			if (!$socket) return;
+
+			$socket.auth = { ...$socket.auth, sessionId: session.id };
+			$sessionId = session.id;
+			$displayName = session.displayName;
+			$roomId = session.roomId ?? '';
+
+			if (session.roomId) {
+				goto(`/room/${session.roomId}`);
+			}
 		});
+
+		$socket?.on('roomUpdate', room => {
+			$currentRoom = room;
+		});
+
+		$socket.onAny((...args) => {
+			console.debug('socket event:', ...args);
+		});
+
+		$socket.onAnyOutgoing((...args) => {
+			console.debug('socket event outgoing:', ...args);
+		});
+
+		return () => {
+			$socket?.disconnect();
+		};
 	});
 </script>
 

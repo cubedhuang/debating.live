@@ -1,14 +1,36 @@
-import type { Session } from './wss/sessionStore';
-
-export type ServerToClientEvents = {
-	whoAreYou: () => void;
-	youAre: (id: string) => void;
+export type Session = {
+	id: string;
+	displayName: string;
+	roomId?: string;
 };
 
-export type ClientToServerEvents = {
-	iAm: (id: string) => void;
+export type RoomInfo = {
+	id: string;
+	name: string;
+	owner: string;
+	users: string[];
+	userData: Record<string, PublicUserInfo>;
+	timers: Record<TimerType, TimerInfo>;
+	actions: ActionData[];
 };
 
-export type InterServerEvents = {};
+export type PublicUserInfo = {
+	displayName: string;
+};
 
-export type SocketData = Session & {};
+export type TimerType = 'main' | 'affPrep' | 'negPrep';
+
+export type TimerInfo = {
+	type: TimerType;
+	totalSeconds: number;
+	secondsLeft: number;
+	active: boolean;
+};
+
+export type Action =
+	| { type: 'startTimer' | 'pauseTimer' | 'resetTimer'; timerType: TimerType }
+	| { type: 'addTime'; timerType: TimerType; seconds: number };
+
+export type ActionData =
+	| (Action & { timestamp: number; user: string })
+	| { timestamp: number; type: 'timerDone'; timerType: TimerType };

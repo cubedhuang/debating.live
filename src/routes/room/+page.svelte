@@ -1,15 +1,34 @@
 <script lang="ts">
-	let name = '';
+	import { goto } from '$app/navigation';
+	import { socket, displayName, currentRoom } from '$lib/stores';
+
 	let roomCode = '';
+
+	async function joinRoom() {
+		if (!$socket) return;
+
+		$socket.auth = { ...$socket.auth, displayName: $displayName };
+		$socket.connect().emit('joinRoom', roomCode, room => {
+			console.log(room);
+
+			if (!room) {
+				goto('/');
+				return;
+			}
+
+			$currentRoom = room;
+			goto(`/room/${room.id}`);
+		});
+	}
 </script>
 
 <main class="wrapper">
 	<h1>Joining Room</h1>
 
-	<form on:submit|preventDefault class="inputs">
+	<form on:submit|preventDefault={joinRoom} class="inputs">
 		<input
 			type="text"
-			bind:value={name}
+			bind:value={$displayName}
 			placeholder="Your name..."
 			class="bg-white px-4 py-2 border-2 rounded-xl
 				focus:border-gray-500 transition outline-none"
@@ -35,7 +54,7 @@
 
 			<button
 				type="submit"
-				disabled={roomCode.length !== 4 || name.length < 2}
+				disabled={roomCode.length !== 4 || $displayName.length < 2}
 				class="shrink-0 button button-blue"
 			>
 				Join
