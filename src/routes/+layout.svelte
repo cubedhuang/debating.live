@@ -6,7 +6,8 @@
 
 	onMount(() => {
 		$socket = io({
-			transports: ['websocket']
+			transports: ['websocket'],
+			autoConnect: false
 		});
 
 		$socket.on('connect', () => {
