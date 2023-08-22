@@ -17,8 +17,6 @@
 			autoConnect: false
 		});
 
-		console.log($socket, $sessionId);
-
 		if ($sessionId) {
 			$socket.auth = { sessionId: $sessionId };
 			$socket.connect();

@@ -23,7 +23,6 @@ export function createWss(server: import('node:http').Server) {
 	>(server);
 
 	const sessions = new Map<string, Session>();
-	const destroyIds = new Map<string, NodeJS.Timeout>();
 	const rooms = new Map<string, RoomInfo>();
 
 	function addUserToRoom(
@@ -45,8 +44,6 @@ export function createWss(server: import('node:http').Server) {
 		}
 
 		socket.join(room.id);
-
-		console.log(socket.rooms);
 	}
 
 	io.use((socket, next) => {
@@ -79,9 +76,6 @@ export function createWss(server: import('node:http').Server) {
 	});
 
 	io.on('connection', socket => {
-		clearTimeout(destroyIds.get(socket.data.id));
-		destroyIds.delete(socket.data.id);
-
 		sessions.set(socket.data.id, {
 			id: socket.data.id,
 			displayName: socket.data.displayName
@@ -94,14 +88,6 @@ export function createWss(server: import('node:http').Server) {
 
 		socket.on('disconnect', () => {
 			console.log(`User ${socket.id} disconnected`);
-
-			destroyIds.set(
-				socket.data.id,
-				setTimeout(() => {
-					sessions.delete(socket.data.id);
-					destroyIds.delete(socket.data.id);
-				}, 1000 * 60 * 5)
-			);
 		});
 
 		socket.on('createRoom', (roomName, callback) => {

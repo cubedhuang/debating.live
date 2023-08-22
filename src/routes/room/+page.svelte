@@ -9,8 +9,6 @@
 
 		$socket.auth = { ...$socket.auth, displayName: $displayName };
 		$socket.connect().emit('joinRoom', roomCode, room => {
-			console.log(room);
-
 			if (!room) {
 				goto('/');
 				return;
