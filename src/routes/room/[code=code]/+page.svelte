@@ -456,11 +456,12 @@
 						People &mdash; {$currentRoom?.users.length ?? 0}
 					</h2>
 
-					{#each Object.values($currentRoom?.userData ?? {}) as user}
+					{#each $currentRoom?.users ?? [] as userId}
+						{@const user = $currentRoom?.userData[userId]}
 						<p class="mt-1 flex justify-between gap-2">
-							<span class="line-clamp-1 break-all"
-								>{user.displayName}</span
-							>
+							<span class="line-clamp-1 break-all">
+								{user?.displayName}
+							</span>
 							<!-- <span class="text-blue-500">Aff</span> -->
 						</p>
 					{/each}
@@ -508,12 +509,16 @@
 									{/if}
 
 									{timerTypeToName(action.timerType)}
-								{:else if action.type === 'userJoin'}
+								{:else if action.type === 'userJoin' || action.type === 'userLeave'}
 									<span class="font-semibold">
-										{userIdToDisplayName(action.user)}
+										{userIdToDisplayName(action.userId)}
 									</span>
 
-									joined
+									{#if action.type === 'userJoin'}
+										joined
+									{:else}
+										left
+									{/if}
 								{/if}
 							</p>
 						{/each}

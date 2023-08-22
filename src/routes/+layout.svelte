@@ -46,12 +46,15 @@
 		$socket.onAnyOutgoing((...args) => {
 			console.debug('socket event outgoing:', ...args);
 		});
-
-		return () => {
-			$socket?.disconnect();
-		};
 	});
 </script>
+
+<svelte:window
+	on:beforeunload={() => {
+		if ($currentRoom?.id) $socket?.emit('leaveRoom', $currentRoom.id);
+		$socket?.disconnect();
+	}}
+/>
 
 <svelte:head>
 	<title>debating.live</title>

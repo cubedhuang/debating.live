@@ -11,6 +11,7 @@ export type ClientToServerEvents = {
 		roomId: string,
 		callback: (room: RoomInfo | null) => void
 	) => void;
+	leaveRoom: (roomId: string) => void;
 	roomAction: (roomId: string, action: Action) => void;
 };
 

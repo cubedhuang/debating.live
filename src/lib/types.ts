@@ -32,4 +32,5 @@ export type Action =
 export type ActionData =
 	| (Action & { timestamp: number; user: string })
 	| { timestamp: number; type: 'timerDone'; timerType: TimerType }
-	| { timestamp: number; type: 'userJoin'; user: string };
+	| { timestamp: number; type: 'userJoin'; userId: string }
+	| { timestamp: number; type: 'userLeave'; userId: string };

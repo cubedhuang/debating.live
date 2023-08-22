@@ -146,13 +146,35 @@ export function createWss(server: import('node:http').Server) {
 			const actionData = {
 				timestamp: Date.now(),
 				type: 'userJoin' as const,
-				user: socket.data.userId
+				userId: socket.data.userId
 			};
 			room.actions.push(actionData);
 
 			io.to(room.id).emit('roomUpdate', room, actionData);
 
 			callback(room);
+		});
+
+		socket.on('leaveRoom', roomId => {
+			const room = rooms.get(roomId);
+
+			if (!room) return;
+
+			const session = sessions.get(socket.data.sessionId)!;
+
+			room.users = room.users.filter(user => user !== session.userId);
+			// don't delete user data, just in case they rejoin
+
+			const actionData = {
+				timestamp: Date.now(),
+				type: 'userLeave' as const,
+				userId: session.userId
+			};
+			room.actions.push(actionData);
+
+			io.to(room.id).emit('roomUpdate', room, actionData);
+
+			socket.leave(room.id);
 		});
 
 		socket.on('roomAction', (roomId, action) => {
