@@ -26,7 +26,7 @@
 			class="bg-white px-4 py-2 border-2 rounded-xl
 				focus:border-gray-500 transition outline-none"
 			required
-			maxlength="64"
+			maxlength="32"
 			minlength="2"
 		/>
 

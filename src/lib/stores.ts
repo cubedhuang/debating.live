@@ -49,4 +49,5 @@ export const socket = writable<Socket<
 > | null>(null);
 export const displayName = writable<string>('');
 export const sessionId = savedWritable<string>('sessionId', '');
+export const userId = writable<string>('');
 export const currentRoom = writable<RoomInfo | null>(null);

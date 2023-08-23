@@ -1,17 +1,25 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
+
+	import {
+		currentRoom,
+		displayName,
+		sessionId,
+		socket,
+		userId
+	} from '$lib/stores';
+	import { UserRole, type TimerType } from '$lib/types';
+	import { formatDuration, roles, userRoleToName } from '$lib/util';
+
 	import ArrowPathMini from '$lib/components/icons/ArrowPathMini.svelte';
-	import Backward from '$lib/components/icons/Backward.svelte';
-	import Forward from '$lib/components/icons/Forward.svelte';
 	import MinusSmallMini from '$lib/components/icons/MinusSmallMini.svelte';
 	import PauseMini from '$lib/components/icons/PauseMini.svelte';
 	import PlayMini from '$lib/components/icons/PlayMini.svelte';
 	import PlusSmallMini from '$lib/components/icons/PlusSmallMini.svelte';
-	import { currentRoom, displayName, sessionId, socket } from '$lib/stores';
-	import { beforeNavigate, goto } from '$app/navigation';
-	import { onMount } from 'svelte';
-	import { formatDuration } from '$lib';
-	import type { TimerType } from '$lib/types';
+	import UserControls from './UserControls.svelte';
+	import StarMini from '$lib/components/icons/StarMini.svelte';
 
 	enum Display {
 		Connect,
@@ -113,6 +121,10 @@
 	}
 
 	$: roomId = $currentRoom?.id ?? '';
+
+	$: isOwner = $currentRoom?.ownerId === $userId;
+	$: canChangeTime =
+		isOwner || $currentRoom?.userData[$userId].role !== UserRole.Spectator;
 </script>
 
 {#if display === Display.Connect}
@@ -149,8 +161,8 @@
 		<div class="flex flex-wrap justify-between h-12">
 			<p>
 				{$displayName}
-				<!-- &middot;
-				<span class="text-red-500">Neg (2nd)</span> -->
+				&middot;
+				{userRoleToName($currentRoom?.userData[$userId].role)}
 			</p>
 
 			<p>
@@ -176,110 +188,113 @@
 						)}
 					</p>
 
-					<div class="mt-4 flex justify-center gap-2">
-						<button
-							class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
+					{#if canChangeTime}
+						<div class="mt-4 flex justify-center gap-2">
+							<button
+								class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
 								disabled:hover:border-gray-200 disabled:text-gray-500 disabled:bg-gray-100"
-							title="Start Timer"
-							disabled={$currentRoom?.timers.main.secondsLeft ===
-								0}
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: $currentRoom?.timers.main.active
-										? 'pauseTimer'
-										: 'startTimer',
-									timerType: 'main'
-								});
-							}}
-						>
-							{#if $currentRoom?.timers.main.active}
-								<PauseMini />
-							{:else}
-								<PlayMini />
-							{/if}
-						</button>
+								title="Start Timer"
+								disabled={$currentRoom?.timers.main
+									.secondsLeft === 0}
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: $currentRoom?.timers.main.active
+											? 'pauseTimer'
+											: 'startTimer',
+										timerType: 'main'
+									});
+								}}
+							>
+								{#if $currentRoom?.timers.main.active}
+									<PauseMini />
+								{:else}
+									<PlayMini />
+								{/if}
+							</button>
 
-						<button
-							class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
+							<button
+								class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
 								disabled:hover:border-gray-200 disabled:text-gray-500 disabled:bg-gray-100"
-							title="Reset Timer"
-							disabled={$currentRoom?.timers.main.secondsLeft ===
-								$currentRoom?.timers.main.totalSeconds &&
-								!$currentRoom?.timers.main.active}
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: 'resetTimer',
-									timerType: 'main'
-								});
-							}}
+								title="Reset Timer"
+								disabled={$currentRoom?.timers.main
+									.secondsLeft ===
+									$currentRoom?.timers.main.totalSeconds &&
+									!$currentRoom?.timers.main.active}
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: 'resetTimer',
+										timerType: 'main'
+									});
+								}}
+							>
+								<ArrowPathMini />
+							</button>
+						</div>
+
+						<div
+							class="mt-2 grid grid-cols-2 sm:flex justify-center gap-2"
 						>
-							<ArrowPathMini />
-						</button>
-					</div>
+							<button
+								class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: 'addTime',
+										timerType: 'main',
+										seconds: 60
+									});
+								}}
+							>
+								<PlusSmallMini />
 
-					<div
-						class="mt-2 grid grid-cols-2 sm:flex justify-center gap-2"
-					>
-						<button
-							class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hover:bg-gray-100 hover:border-gray-500 transition"
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: 'addTime',
-									timerType: 'main',
-									seconds: 60
-								});
-							}}
-						>
-							<PlusSmallMini />
+								1m
+							</button>
 
-							1m
-						</button>
+							<button
+								class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: 'addTime',
+										timerType: 'main',
+										seconds: 10
+									});
+								}}
+							>
+								<PlusSmallMini />
 
-						<button
-							class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: 'addTime',
-									timerType: 'main',
-									seconds: 10
-								});
-							}}
-						>
-							<PlusSmallMini />
+								10s
+							</button>
 
-							10s
-						</button>
+							<button
+								class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: 'addTime',
+										timerType: 'main',
+										seconds: -10
+									});
+								}}
+							>
+								<MinusSmallMini />
 
-						<button
-							class="justify-self-end w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: 'addTime',
-									timerType: 'main',
-									seconds: -10
-								});
-							}}
-						>
-							<MinusSmallMini />
+								10s
+							</button>
 
-							10s
-						</button>
+							<button
+								class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+								on:click={() => {
+									$socket?.emit('roomAction', roomId, {
+										type: 'addTime',
+										timerType: 'main',
+										seconds: -60
+									});
+								}}
+							>
+								<MinusSmallMini />
 
-						<button
-							class="justify-self-start w-16 flex items-center justify-center border-2 rounded-xl p-1 text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-							on:click={() => {
-								$socket?.emit('roomAction', roomId, {
-									type: 'addTime',
-									timerType: 'main',
-									seconds: -60
-								});
-							}}
-						>
-							<MinusSmallMini />
-
-							1m
-						</button>
-					</div>
+								1m
+							</button>
+						</div>
+					{/if}
 				</div>
 
 				<!-- <div
@@ -300,14 +315,22 @@
 					</button>
 				</div> -->
 
-				<div class="mt-8 gap-4 grid sm:grid-cols-2">
+				<div
+					class="mt-8 gap-4 grid {canChangeTime
+						? 'lg:grid-cols-2'
+						: 'sm:grid-cols-2'}"
+				>
 					{#each ['Aff', 'Neg'] as side}
 						{@const timerType = sideToTimerType(side)}
 
 						<div
 							class="bg-white border-2 rounded-xl p-6 flex items-center"
 						>
-							<div>
+							<div
+								class={canChangeTime
+									? ''
+									: 'w-full text-center'}
+							>
 								<h2 class="text-gray-500">
 									{side} Prep Time
 								</h2>
@@ -325,104 +348,133 @@
 								</p>
 							</div>
 
-							<div class="ml-auto flex flex-col gap-0.5">
-								<button
-									class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
+							{#if canChangeTime}
+								<div class="ml-auto flex flex-col gap-0.5">
+									<button
+										class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
 										disabled:hover:border-gray-200 disabled:text-gray-500 disabled:bg-gray-100"
-									title="Start Timer"
-									disabled={$currentRoom?.timers[timerType]
-										.secondsLeft === 0}
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: $currentRoom?.timers[
-												timerType
-											].active
-												? 'pauseTimer'
-												: 'startTimer',
+										title="Start Timer"
+										disabled={$currentRoom?.timers[
 											timerType
-										});
-									}}
-								>
-									{#if $currentRoom?.timers[timerType].active}
-										<PauseMini />
-									{:else}
-										<PlayMini />
-									{/if}
-								</button>
+										].secondsLeft === 0}
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: $currentRoom?.timers[
+														timerType
+													].active
+														? 'pauseTimer'
+														: 'startTimer',
+													timerType
+												}
+											);
+										}}
+									>
+										{#if $currentRoom?.timers[timerType].active}
+											<PauseMini />
+										{:else}
+											<PlayMini />
+										{/if}
+									</button>
 
-								<button
-									class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
+									<button
+										class="border-2 rounded-xl p-2 text-green-500 hover:bg-green-100 hover:border-green-500 transition
 										disabled:hover:border-gray-200 disabled:text-gray-500 disabled:bg-gray-100"
-									title="Reset Timer"
-									disabled={$currentRoom?.timers[timerType]
-										.secondsLeft ===
-										$currentRoom?.timers[timerType]
-											.totalSeconds &&
-										!$currentRoom?.timers[timerType].active}
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: 'resetTimer',
+										title="Reset Timer"
+										disabled={$currentRoom?.timers[
 											timerType
-										});
-									}}
-								>
-									<ArrowPathMini />
-								</button>
-							</div>
+										].secondsLeft ===
+											$currentRoom?.timers[timerType]
+												.totalSeconds &&
+											!$currentRoom?.timers[timerType]
+												.active}
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: 'resetTimer',
+													timerType
+												}
+											);
+										}}
+									>
+										<ArrowPathMini />
+									</button>
+								</div>
 
-							<div class="ml-2 flex flex-col gap-0.5">
-								<button
-									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: 'addTime',
-											timerType,
-											seconds: 60
-										});
-									}}
-								>
-									<PlusSmallMini /> 1m
-								</button>
+								<div class="ml-2 flex flex-col gap-0.5">
+									<button
+										class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: 'addTime',
+													timerType,
+													seconds: 60
+												}
+											);
+										}}
+									>
+										<PlusSmallMini /> 1m
+									</button>
 
-								<button
-									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: 'addTime',
-											timerType,
-											seconds: 10
-										});
-									}}
-								>
-									<PlusSmallMini /> 10s
-								</button>
+									<button
+										class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: 'addTime',
+													timerType,
+													seconds: 10
+												}
+											);
+										}}
+									>
+										<PlusSmallMini /> 10s
+									</button>
 
-								<button
-									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: 'addTime',
-											timerType,
-											seconds: -10
-										});
-									}}
-								>
-									<MinusSmallMini /> 10s
-								</button>
+									<button
+										class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: 'addTime',
+													timerType,
+													seconds: -10
+												}
+											);
+										}}
+									>
+										<MinusSmallMini /> 10s
+									</button>
 
-								<button
-									class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
-									on:click={() => {
-										$socket?.emit('roomAction', roomId, {
-											type: 'addTime',
-											timerType,
-											seconds: -60
-										});
-									}}
-								>
-									<MinusSmallMini /> 1m
-								</button>
-							</div>
+									<button
+										class="border-2 rounded-xl px-2 py-0.5 flex items-center text-gray-500 hocus-visible:bg-gray-100 hocus-visible:border-gray-500 transition"
+										on:click={() => {
+											$socket?.emit(
+												'roomAction',
+												roomId,
+												{
+													type: 'addTime',
+													timerType,
+													seconds: -60
+												}
+											);
+										}}
+									>
+										<MinusSmallMini /> 1m
+									</button>
+								</div>
+							{/if}
 						</div>
 					{/each}
 				</div>
@@ -431,54 +483,63 @@
 			<div
 				class="shrink-0 md:w-56 lg:w-64 xl:w-80 grid sidebar md:max-h-[calc(100vh-9rem)] gap-8"
 			>
-				<div class="bg-white border-2 rounded-xl p-6 overflow-y-auto">
-					<!-- <h2 class="text-gray-500">Judges &mdash; 1</h2>
+				<div
+					class="bg-white border-2 rounded-xl p-6 pt-2 overflow-y-auto"
+				>
+					{#each roles as role}
+						{@const users =
+							$currentRoom?.users
+								.filter(
+									userId =>
+										$currentRoom?.userData[userId].role ===
+										role
+								)
+								.map(
+									userId => $currentRoom?.userData[userId]
+								) ?? []}
 
-					{#each { length: 1 } as _, i}
-						<p class="mt-1 line-clamp-1 break-all">Joshua</p>
-					{/each}
+						{#if users.length}
+							<h2 class="mt-4 text-gray-500">
+								{userRoleToName(role)}s &mdash; {users.length}
+							</h2>
 
-					<h2 class="mt-4 text-gray-500">Competitors &mdash; 4</h2>
+							{#each users as user}
+								<p class="mt-1 flex justify-between gap-2">
+									<span class="flex gap-1">
+										<span class="line-clamp-1 break-all">
+											{user?.displayName}
+										</span>
 
-					<p class="mt-1 flex justify-between gap-2">
-						<span class="line-clamp-1 break-all"
-							>Danielllllllllllllllllllllllllllllllllllllllllllllllll</span
-						>
-						<span class="text-blue-500">Aff</span>
-					</p>
-					<p class="mt-1 flex justify-between gap-2">
-						<span class="line-clamp-1 break-all">Owen</span>
-						<span class="text-blue-500">Aff</span>
-					</p>
-					<p class="mt-1 flex justify-between gap-2">
-						<span class="line-clamp-1 break-all">Pranaya</span>
-						<span class="text-red-500">Neg</span>
-					</p>
-					<p class="mt-1 flex justify-between gap-2">
-						<span class="line-clamp-1 break-all">Anna</span>
-						<span class="text-red-500">Neg</span>
-					</p>
-					
-					<h2 class="mt-4 text-gray-500">Spectators &mdash; 5</h2>
-					
-					{#each { length: 5 } as _, i}
-					<p class="mt-1 line-clamp-1 break-all">
-						Spectator {i}
-					</p>
-					{/each} -->
+										{#if $currentRoom?.ownerId === user?.userId}
+											<span
+												class="text-amber-500 translate-y-px"
+											>
+												<StarMini />
+											</span>
+										{/if}
+									</span>
+									<!-- <span class="text-blue-500">Aff</span> -->
+									{#if isOwner}
+										<UserControls
+											currentRole={role}
+											on:setRole={e => {
+												if (!user) return;
 
-					<h2 class="text-gray-500">
-						People &mdash; {$currentRoom?.users.length ?? 0}
-					</h2>
-
-					{#each $currentRoom?.users ?? [] as userId}
-						{@const user = $currentRoom?.userData[userId]}
-						<p class="mt-1 flex justify-between gap-2">
-							<span class="line-clamp-1 break-all">
-								{user?.displayName}
-							</span>
-							<!-- <span class="text-blue-500">Aff</span> -->
-						</p>
+												$socket?.emit(
+													'roomAction',
+													roomId,
+													{
+														type: 'setRole',
+														toUserId: user.userId,
+														role: e.detail
+													}
+												);
+											}}
+										/>
+									{/if}
+								</p>
+							{/each}
+						{/if}
 					{/each}
 				</div>
 
@@ -486,11 +547,11 @@
 					<h2 class="p-6 pb-2 text-gray-500 border-b-2">Activity</h2>
 
 					<div
-						class="mt-auto overflow-y-auto h-48 md:h-auto p-6 flex flex-col gap-2 text-xs"
+						class="mt-auto overflow-y-auto h-48 md:h-auto p-6 pt-4 text-xs"
 						bind:this={scrollableActivity}
 					>
 						{#each $currentRoom?.actions ?? [] as action}
-							<p>
+							<p class="mt-2 gap-1">
 								<span
 									class="text-gray-500 font-mono font-semibold tracking-tighter inline-block mr-1"
 								>
@@ -535,6 +596,31 @@
 										joined
 									{:else}
 										left
+									{/if}
+								{:else if action.type === 'setRole'}
+									{#if action.userId === action.toUserId}
+										<span class="font-semibold">
+											{userIdToDisplayName(
+												action.toUserId
+											)}
+										</span>
+
+										is now a
+										{userRoleToName(action.role)}
+									{:else}
+										<span class="font-semibold">
+											{userIdToDisplayName(action.userId)}
+										</span>
+
+										made
+
+										<span class="font-semibold">
+											{userIdToDisplayName(
+												action.toUserId
+											)}
+										</span>
+
+										a {userRoleToName(action.role)}
 									{/if}
 								{/if}
 							</p>

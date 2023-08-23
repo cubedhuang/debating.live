@@ -7,14 +7,24 @@ export type Session = {
 export type RoomInfo = {
 	id: string;
 	name: string;
-	owner: string;
+	ownerId: string;
 	users: string[];
 	userData: Record<string, PublicUserInfo>;
 	timers: Record<TimerType, TimerInfo>;
 	actions: ActionData[];
 };
 
-export type PublicUserInfo = Omit<Session, 'sessionId'>;
+export type PublicUserInfo = {
+	userId: string;
+	displayName: string;
+	role: UserRole;
+};
+
+export enum UserRole {
+	Judge,
+	Competitor,
+	Spectator
+}
 
 export type TimerType = 'main' | 'affPrep' | 'negPrep';
 
@@ -27,7 +37,8 @@ export type TimerInfo = {
 
 export type UserAction =
 	| { type: 'startTimer' | 'pauseTimer' | 'resetTimer'; timerType: TimerType }
-	| { type: 'addTime'; timerType: TimerType; seconds: number };
+	| { type: 'addTime'; timerType: TimerType; seconds: number }
+	| { type: 'setRole'; toUserId: string; role: UserRole };
 
 export type ServerAction =
 	| { type: 'timerDone'; timerType: TimerType }

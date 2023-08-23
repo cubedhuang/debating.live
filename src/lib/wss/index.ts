@@ -1,4 +1,4 @@
-import type { PublicUserInfo, RoomInfo, Session } from '$lib/types';
+import { type RoomInfo, type Session, UserRole } from '../types';
 import { Server, Socket } from 'socket.io';
 
 import type {
@@ -7,6 +7,23 @@ import type {
 	ServerToClientEvents,
 	SocketData
 } from './types';
+
+process.on('unhandledRejection', error => {
+	console.error('unhandledRejection', error);
+});
+
+process.on('uncaughtException', error => {
+	console.error('uncaughtException', error);
+});
+
+function badDisplayName(displayName: unknown): displayName is string {
+	return (
+		!displayName ||
+		typeof displayName !== 'string' ||
+		displayName.length < 2 ||
+		displayName.length > 32
+	);
+}
 
 function createRoomId() {
 	return Array.from({ length: 4 }, () =>
@@ -26,12 +43,6 @@ export function createWss(server: import('node:http').Server) {
 	const sessions = new Map<string, Session>();
 	const rooms = new Map<string, RoomInfo>();
 
-	function publicUserInfo(session: Session): PublicUserInfo {
-		return Object.fromEntries(
-			Object.entries(session).filter(([key]) => key !== 'sessionId')
-		) as PublicUserInfo;
-	}
-
 	function addUserToRoom(
 		socket: Socket<
 			ClientToServerEvents,
@@ -45,9 +56,14 @@ export function createWss(server: import('node:http').Server) {
 
 		if (!room.users.includes(session.userId)) {
 			room.users.push(session.userId);
-			room.userData[session.userId] = publicUserInfo(
-				sessions.get(session.sessionId)!
-			);
+			room.userData[session.userId] = {
+				userId: session.userId,
+				displayName: session.displayName,
+				role:
+					room.ownerId === session.userId
+						? UserRole.Competitor
+						: UserRole.Spectator
+			};
 		}
 
 		socket.join(room.id);
@@ -62,19 +78,20 @@ export function createWss(server: import('node:http').Server) {
 			if (session) {
 				socket.data.sessionId = sessionId;
 				socket.data.userId = session.userId;
-				socket.data.displayName = session.displayName;
+
+				const displayName = socket.handshake.auth.displayName;
+				if (badDisplayName(displayName)) {
+					socket.data.displayName = session.displayName;
+				} else {
+					socket.data.displayName = displayName;
+				}
 				return next();
 			}
 		}
 
 		const displayName = socket.handshake.auth.displayName;
 
-		if (
-			!displayName ||
-			typeof displayName !== 'string' ||
-			displayName.length < 2 ||
-			displayName.length > 64
-		) {
+		if (badDisplayName(displayName)) {
 			return next(new Error('Invalid Display Name'));
 		}
 
@@ -126,10 +143,16 @@ export function createWss(server: import('node:http').Server) {
 		});
 
 		socket.on('createRoom', (roomName, callback) => {
+			if (roomName.length < 2) {
+				return;
+			} else if (roomName.length > 64) {
+				roomName = roomName.slice(0, 64);
+			}
+
 			const room: RoomInfo = {
 				id: createRoomId(),
 				name: roomName,
-				owner: socket.data.userId,
+				ownerId: socket.data.userId,
 				users: [],
 				userData: {},
 				timers: {
@@ -159,6 +182,13 @@ export function createWss(server: import('node:http').Server) {
 
 			addUserToRoom(socket, room);
 
+			const actionData = {
+				timestamp: Date.now(),
+				type: 'userJoin' as const,
+				userId: socket.data.userId
+			};
+			room.actions.push(actionData);
+
 			callback(room);
 		});
 
@@ -179,37 +209,22 @@ export function createWss(server: import('node:http').Server) {
 			};
 			room.actions.push(actionData);
 
-			io.to(room.id).emit('roomUpdate', room, actionData);
+			socket.broadcast.to(room.id).emit('roomUpdate', room, actionData);
 
 			callback(room);
 		});
-
-		// socket.on('leaveRoom', roomId => {
-		// 	const room = rooms.get(roomId);
-
-		// 	if (!room) return;
-
-		// 	const session = sessions.get(socket.data.sessionId)!;
-
-		// 	room.users = room.users.filter(user => user !== session.userId);
-		// 	// don't delete user data, just in case they rejoin
-
-		// 	const actionData = {
-		// 		timestamp: Date.now(),
-		// 		type: 'userLeave' as const,
-		// 		userId: session.userId
-		// 	};
-		// 	room.actions.push(actionData);
-
-		// 	io.to(room.id).emit('roomUpdate', room, actionData);
-
-		// 	socket.leave(room.id);
-		// });
 
 		socket.on('roomAction', (roomId, action) => {
 			const session = sessions.get(socket.data.sessionId)!;
 			const room = rooms.get(roomId);
 			if (!room || !room.users.includes(session.userId)) return;
+
+			if (
+				room.userData[session.userId].role === UserRole.Spectator &&
+				room.ownerId !== session.userId
+			) {
+				return;
+			}
 
 			let makeNewAction = true;
 
@@ -244,6 +259,16 @@ export function createWss(server: import('node:http').Server) {
 						makeNewAction = false;
 					}
 					break;
+				case 'setRole':
+					if (room.ownerId === session.userId) {
+						room.userData[action.toUserId].role = action.role;
+					} else {
+						return;
+					}
+					break;
+				default:
+					// @ts-expect-error switch should be exhaustive
+					return action.type;
 			}
 
 			if (makeNewAction) {

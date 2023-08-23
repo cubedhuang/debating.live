@@ -2,7 +2,13 @@
 	import { io } from 'socket.io-client';
 	import { onMount } from 'svelte';
 	import '../app.postcss';
-	import { currentRoom, displayName, sessionId, socket } from '$lib/stores';
+	import {
+		currentRoom,
+		displayName,
+		sessionId,
+		socket,
+		userId
+	} from '$lib/stores';
 
 	onMount(() => {
 		$socket = io({
@@ -32,6 +38,7 @@
 
 			$socket.auth = { ...$socket.auth, sessionId: session.sessionId };
 			$sessionId = session.sessionId;
+			$userId = session.userId;
 			$displayName = session.displayName;
 		});
 
