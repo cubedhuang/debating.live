@@ -22,6 +22,7 @@ export function createWss(server: import('node:http').Server) {
 		SocketData
 	>(server);
 
+	const sessionConnectionCounts = new Map<string, number>();
 	const sessions = new Map<string, Session>();
 	const rooms = new Map<string, RoomInfo>();
 
@@ -84,6 +85,11 @@ export function createWss(server: import('node:http').Server) {
 	});
 
 	io.on('connection', socket => {
+		sessionConnectionCounts.set(
+			socket.data.sessionId,
+			(sessionConnectionCounts.get(socket.data.sessionId) ?? 0) + 1
+		);
+
 		sessions.set(socket.data.sessionId, {
 			sessionId: socket.data.sessionId,
 			userId: socket.data.userId,
@@ -93,7 +99,30 @@ export function createWss(server: import('node:http').Server) {
 		socket.emit('session', sessions.get(socket.data.sessionId)!);
 
 		socket.on('disconnect', () => {
-			console.log(`User ${socket.id} disconnected`);
+			sessionConnectionCounts.set(
+				socket.data.sessionId,
+				(sessionConnectionCounts.get(socket.data.sessionId) ?? 0) - 1
+			);
+
+			if (sessionConnectionCounts.get(socket.data.sessionId) === 0) {
+				for (const room of rooms.values()) {
+					if (room.users.includes(socket.data.userId)) {
+						room.users = room.users.filter(
+							userId => userId !== socket.data.userId
+						);
+						// don't delete user data in case they rejoin
+
+						const actionData = {
+							timestamp: Date.now(),
+							type: 'userLeave' as const,
+							userId: socket.data.userId
+						};
+						room.actions.push(actionData);
+
+						io.to(room.id).emit('roomUpdate', room, actionData);
+					}
+				}
+			}
 		});
 
 		socket.on('createRoom', (roomName, callback) => {
@@ -155,27 +184,27 @@ export function createWss(server: import('node:http').Server) {
 			callback(room);
 		});
 
-		socket.on('leaveRoom', roomId => {
-			const room = rooms.get(roomId);
+		// socket.on('leaveRoom', roomId => {
+		// 	const room = rooms.get(roomId);
 
-			if (!room) return;
+		// 	if (!room) return;
 
-			const session = sessions.get(socket.data.sessionId)!;
+		// 	const session = sessions.get(socket.data.sessionId)!;
 
-			room.users = room.users.filter(user => user !== session.userId);
-			// don't delete user data, just in case they rejoin
+		// 	room.users = room.users.filter(user => user !== session.userId);
+		// 	// don't delete user data, just in case they rejoin
 
-			const actionData = {
-				timestamp: Date.now(),
-				type: 'userLeave' as const,
-				userId: session.userId
-			};
-			room.actions.push(actionData);
+		// 	const actionData = {
+		// 		timestamp: Date.now(),
+		// 		type: 'userLeave' as const,
+		// 		userId: session.userId
+		// 	};
+		// 	room.actions.push(actionData);
 
-			io.to(room.id).emit('roomUpdate', room, actionData);
+		// 	io.to(room.id).emit('roomUpdate', room, actionData);
 
-			socket.leave(room.id);
-		});
+		// 	socket.leave(room.id);
+		// });
 
 		socket.on('roomAction', (roomId, action) => {
 			const session = sessions.get(socket.data.sessionId)!;

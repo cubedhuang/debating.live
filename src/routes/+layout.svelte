@@ -51,7 +51,6 @@
 
 <svelte:window
 	on:beforeunload={() => {
-		if ($currentRoom?.id) $socket?.emit('leaveRoom', $currentRoom.id);
 		$socket?.disconnect();
 	}}
 />

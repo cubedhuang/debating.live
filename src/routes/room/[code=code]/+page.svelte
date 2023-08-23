@@ -8,7 +8,7 @@
 	import PlayMini from '$lib/components/icons/PlayMini.svelte';
 	import PlusSmallMini from '$lib/components/icons/PlusSmallMini.svelte';
 	import { currentRoom, displayName, sessionId, socket } from '$lib/stores';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatDuration } from '$lib';
 	import type { TimerType } from '$lib/types';
@@ -68,9 +68,24 @@
 			}
 		}, 1000);
 
+		if ($socket && !$socket.connected) {
+			$socket.connect().emit('joinRoom', $page.params.code, room => {
+				if (!room) {
+					goto('/');
+					return;
+				}
+
+				$currentRoom = room;
+			});
+		}
+
 		return () => {
 			clearInterval(id);
 		};
+	});
+
+	beforeNavigate(() => {
+		$socket?.disconnect();
 	});
 
 	const sideToTimerType = (side: string) =>
@@ -503,9 +518,11 @@
 										{userIdToDisplayName(action.user)}
 									</span>
 									{#if action.seconds > 0}
-										added {action.seconds} seconds to
+										added {formatDuration(action.seconds)} to
 									{:else if action.seconds < 0}
-										removed {-action.seconds} seconds from
+										removed {formatDuration(
+											-action.seconds
+										)} from
 									{/if}
 
 									{timerTypeToName(action.timerType)}
