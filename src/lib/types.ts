@@ -25,12 +25,15 @@ export type TimerInfo = {
 	active: boolean;
 };
 
-export type Action =
+export type UserAction =
 	| { type: 'startTimer' | 'pauseTimer' | 'resetTimer'; timerType: TimerType }
 	| { type: 'addTime'; timerType: TimerType; seconds: number };
 
+export type ServerAction =
+	| { type: 'timerDone'; timerType: TimerType }
+	| { type: 'userJoin'; userId: string }
+	| { type: 'userLeave'; userId: string };
+
 export type ActionData =
-	| (Action & { timestamp: number; user: string })
-	| { timestamp: number; type: 'timerDone'; timerType: TimerType }
-	| { timestamp: number; type: 'userJoin'; userId: string }
-	| { timestamp: number; type: 'userLeave'; userId: string };
+	| (UserAction & { timestamp: number; userId: string })
+	| (ServerAction & { timestamp: number });

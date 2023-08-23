@@ -1,4 +1,4 @@
-import type { Action, ActionData, RoomInfo, Session } from '$lib/types';
+import type { ActionData, RoomInfo, Session, UserAction } from '$lib/types';
 
 export type ServerToClientEvents = {
 	session: (session: Session) => void;
@@ -11,7 +11,7 @@ export type ClientToServerEvents = {
 		roomId: string,
 		callback: (room: RoomInfo | null) => void
 	) => void;
-	roomAction: (roomId: string, action: Action) => void;
+	roomAction: (roomId: string, action: UserAction) => void;
 };
 
 export type InterServerEvents = {};

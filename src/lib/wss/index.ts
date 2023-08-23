@@ -211,6 +211,8 @@ export function createWss(server: import('node:http').Server) {
 			const room = rooms.get(roomId);
 			if (!room || !room.users.includes(session.userId)) return;
 
+			let makeNewAction = true;
+
 			switch (action.type) {
 				case 'startTimer':
 					room.timers[action.timerType].active = true;
@@ -229,21 +231,39 @@ export function createWss(server: import('node:http').Server) {
 						room.timers[action.timerType].secondsLeft,
 						0
 					);
+					const lastAction = room.actions[room.actions.length - 1];
+					if (
+						lastAction?.type === 'addTime' &&
+						lastAction.timerType === action.timerType &&
+						lastAction.userId === session.userId &&
+						lastAction.timestamp > Date.now() - 3000 &&
+						Math.sign(lastAction.seconds) ===
+							Math.sign(action.seconds)
+					) {
+						lastAction.seconds += action.seconds;
+						makeNewAction = false;
+					}
 					break;
 			}
 
-			const actionData = {
-				...action,
-				timestamp: Date.now(),
-				user: session.userId
-			};
-			room.actions.push(actionData);
+			if (makeNewAction) {
+				const actionData = {
+					...action,
+					timestamp: Date.now(),
+					userId: session.userId
+				};
+				room.actions.push(actionData);
+			}
 
 			if (room.actions.length > 100) {
 				room.actions.splice(0, room.actions.length - 100);
 			}
 
-			io.to(roomId).emit('roomUpdate', room, actionData);
+			io.to(roomId).emit(
+				'roomUpdate',
+				room,
+				room.actions[room.actions.length - 1]
+			);
 		});
 	});
 

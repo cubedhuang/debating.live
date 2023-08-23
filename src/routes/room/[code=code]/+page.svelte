@@ -503,7 +503,7 @@
 									{timerTypeToName(action.timerType)} done
 								{:else if action.type === 'startTimer' || action.type === 'resetTimer' || action.type === 'pauseTimer'}
 									<span class="font-semibold">
-										{userIdToDisplayName(action.user)}
+										{userIdToDisplayName(action.userId)}
 									</span>
 									{#if action.type === 'startTimer'}
 										started
@@ -515,7 +515,7 @@
 									{timerTypeToName(action.timerType)}
 								{:else if action.type === 'addTime'}
 									<span class="font-semibold">
-										{userIdToDisplayName(action.user)}
+										{userIdToDisplayName(action.userId)}
 									</span>
 									{#if action.seconds > 0}
 										added {formatDuration(action.seconds)} to
