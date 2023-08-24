@@ -76,6 +76,9 @@ export function createWss(server: import('node:http').Server) {
 						? UserPermissions.Owner
 						: UserPermissions.Default
 			};
+		} else {
+			// update display name
+			room.userData[session.userId].displayName = session.displayName;
 		}
 
 		socket.join(room.id);
