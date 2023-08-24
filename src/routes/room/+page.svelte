@@ -3,6 +3,7 @@
 	import { socket, displayName, currentRoom } from '$lib/stores';
 
 	let roomCode = '';
+	let joinError = '';
 
 	async function joinRoom() {
 		if (!$socket) return;
@@ -10,7 +11,7 @@
 		$socket.auth = { ...$socket.auth, displayName: $displayName };
 		$socket.connect().emit('joinRoom', roomCode, room => {
 			if (!room) {
-				goto('/');
+				joinError = "This room doesn't exist!";
 				return;
 			}
 
@@ -23,7 +24,15 @@
 <main class="wrapper">
 	<h1>Joining Room</h1>
 
-	<form on:submit|preventDefault={joinRoom} class="inputs">
+	<form on:submit|preventDefault={joinRoom} class="inputs relative">
+		{#if joinError}
+			<p
+				class="mb-2 absolute bottom-full text-red-500 inset-x-0 text-center"
+			>
+				{joinError}
+			</p>
+		{/if}
+
 		<input
 			type="text"
 			bind:value={$displayName}

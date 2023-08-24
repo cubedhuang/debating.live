@@ -23,8 +23,7 @@
 
 	enum Display {
 		Connect,
-		In,
-		Done
+		In
 	}
 
 	let display: Display = Display.Connect;
@@ -38,13 +37,15 @@
 	$: if ($socket && $sessionId && !$currentRoom?.id && !$socket.connected) {
 		$socket.connect().emit('joinRoom', $page.params.code, room => {
 			if (!room) {
-				goto('/');
+				joinError = "This room doesn't exist!";
 				return;
 			}
 
 			$currentRoom = room;
 		});
 	}
+
+	let joinError = '';
 
 	function joinRoom() {
 		if (!$socket) return;
@@ -56,7 +57,7 @@
 
 		$socket.connect().emit('joinRoom', $page.params.code, room => {
 			if (!room) {
-				goto('/');
+				joinError = "This room doesn't exist!";
 				return;
 			}
 
@@ -79,7 +80,7 @@
 		if ($socket && !$socket.connected) {
 			$socket.connect().emit('joinRoom', $page.params.code, room => {
 				if (!room) {
-					goto('/');
+					joinError = "This room doesn't exist!";
 					return;
 				}
 
@@ -114,7 +115,15 @@
 	<main class="wrapper">
 		<h1>Joining Room &middot; {$page.params.code}</h1>
 
-		<form on:submit|preventDefault={joinRoom} class="inputs">
+		<form on:submit|preventDefault={joinRoom} class="inputs relative">
+			{#if joinError}
+				<p
+					class="mb-2 absolute bottom-full text-red-500 inset-x-0 text-center"
+				>
+					{joinError}
+				</p>
+			{/if}
+
 			<input
 				type="text"
 				bind:value={$displayName}
@@ -128,7 +137,7 @@
 
 			<button
 				type="submit"
-				disabled={$displayName.length < 2}
+				disabled={$displayName.length < 2 || joinError}
 				class="w-full button button-blue"
 			>
 				Join
