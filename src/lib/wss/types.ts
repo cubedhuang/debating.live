@@ -14,6 +14,6 @@ export type ClientToServerEvents = {
 	roomAction: (roomId: string, action: UserAction) => void;
 };
 
-export type InterServerEvents = {};
+export type InterServerEvents = Record<string, never>;
 
-export type SocketData = Session & {};
+export type SocketData = Session & Record<string, never>;

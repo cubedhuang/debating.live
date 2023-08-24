@@ -1,4 +1,9 @@
-import { type RoomInfo, type Session, UserRole } from '../types';
+import {
+	type RoomInfo,
+	type Session,
+	UserRole,
+	UserPermissions
+} from '../types';
 import { Server, Socket } from 'socket.io';
 
 import type {
@@ -56,13 +61,20 @@ export function createWss(server: import('node:http').Server) {
 
 		if (!room.users.includes(session.userId)) {
 			room.users.push(session.userId);
+		}
+
+		if (!room.userData[session.userId]) {
 			room.userData[session.userId] = {
 				userId: session.userId,
 				displayName: session.displayName,
 				role:
 					room.ownerId === session.userId
 						? UserRole.Competitor
-						: UserRole.Spectator
+						: UserRole.Spectator,
+				permissions:
+					room.ownerId === session.userId
+						? UserPermissions.Owner
+						: UserPermissions.Default
 			};
 		}
 
@@ -219,9 +231,12 @@ export function createWss(server: import('node:http').Server) {
 			const room = rooms.get(roomId);
 			if (!room || !room.users.includes(session.userId)) return;
 
+			const user = room.userData[session.userId];
+
 			if (
-				room.userData[session.userId].role === UserRole.Spectator &&
-				room.ownerId !== session.userId
+				user.permissions !== UserPermissions.Owner &&
+				user.permissions !== UserPermissions.Admin &&
+				user.role === UserRole.Spectator
 			) {
 				return;
 			}
@@ -240,7 +255,7 @@ export function createWss(server: import('node:http').Server) {
 						room.timers[action.timerType].totalSeconds;
 					room.timers[action.timerType].active = false;
 					break;
-				case 'addTime':
+				case 'addTime': {
 					room.timers[action.timerType].secondsLeft += action.seconds;
 					room.timers[action.timerType].secondsLeft = Math.max(
 						room.timers[action.timerType].secondsLeft,
@@ -259,9 +274,27 @@ export function createWss(server: import('node:http').Server) {
 						makeNewAction = false;
 					}
 					break;
+				}
 				case 'setRole':
-					if (room.ownerId === session.userId) {
+					if (
+						user.permissions === UserPermissions.Owner ||
+						user.permissions === UserPermissions.Admin
+					) {
 						room.userData[action.toUserId].role = action.role;
+					} else {
+						return;
+					}
+					break;
+				case 'setPermissions':
+					if (user.permissions === UserPermissions.Owner) {
+						room.userData[action.toUserId].permissions =
+							action.permissions;
+
+						if (action.permissions === UserPermissions.Owner) {
+							room.userData[session.userId].permissions =
+								UserPermissions.Admin;
+							room.ownerId = action.toUserId;
+						}
 					} else {
 						return;
 					}

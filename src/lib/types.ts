@@ -18,12 +18,19 @@ export type PublicUserInfo = {
 	userId: string;
 	displayName: string;
 	role: UserRole;
+	permissions: UserPermissions;
 };
 
 export enum UserRole {
 	Judge,
 	Competitor,
 	Spectator
+}
+
+export enum UserPermissions {
+	Default,
+	Admin,
+	Owner
 }
 
 export type TimerType = 'main' | 'affPrep' | 'negPrep';
@@ -38,7 +45,12 @@ export type TimerInfo = {
 export type UserAction =
 	| { type: 'startTimer' | 'pauseTimer' | 'resetTimer'; timerType: TimerType }
 	| { type: 'addTime'; timerType: TimerType; seconds: number }
-	| { type: 'setRole'; toUserId: string; role: UserRole };
+	| { type: 'setRole'; toUserId: string; role: UserRole }
+	| {
+			type: 'setPermissions';
+			toUserId: string;
+			permissions: UserPermissions;
+	  };
 
 export type ServerAction =
 	| { type: 'timerDone'; timerType: TimerType }
