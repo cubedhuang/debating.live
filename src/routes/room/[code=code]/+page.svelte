@@ -30,7 +30,7 @@
 
 	$: if ($socket && (!$sessionId || !$currentRoom?.id)) {
 		display = Display.Connect;
-	} else if ($socket && $sessionId) {
+	} else if ($socket && $currentRoom?.id) {
 		display = Display.In;
 	}
 
