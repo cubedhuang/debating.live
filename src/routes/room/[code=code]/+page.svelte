@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { beforeNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	import {
@@ -137,7 +137,7 @@
 
 			<button
 				type="submit"
-				disabled={$displayName.length < 2 || joinError}
+				disabled={$displayName.length < 2 || !!joinError}
 				class="w-full button button-blue"
 			>
 				Join
@@ -481,30 +481,26 @@
 			<div
 				class="shrink-0 md:w-56 lg:w-64 xl:w-80 grid sidebar md:max-h-[calc(100vh-9rem)] gap-8"
 			>
-				<div
-					class="bg-white border-2 rounded-xl p-6 pt-2 overflow-y-auto"
-				>
-					<UserList
-						users={$currentRoom?.users ?? []}
-						userData={$currentRoom?.userData ?? {}}
-						{isAdmin}
-						{isOwner}
-						on:setRole={e => {
-							$socket?.emit('roomAction', roomId, {
-								type: 'setRole',
-								toUserId: e.detail.user,
-								role: e.detail.role
-							});
-						}}
-						on:setPermissions={e => {
-							$socket?.emit('roomAction', roomId, {
-								type: 'setPermissions',
-								toUserId: e.detail.user,
-								permissions: e.detail.permissions
-							});
-						}}
-					/>
-				</div>
+				<UserList
+					users={$currentRoom?.users ?? []}
+					userData={$currentRoom?.userData ?? {}}
+					{isAdmin}
+					{isOwner}
+					on:setRole={e => {
+						$socket?.emit('roomAction', roomId, {
+							type: 'setRole',
+							toUserId: e.detail.user,
+							role: e.detail.role
+						});
+					}}
+					on:setPermissions={e => {
+						$socket?.emit('roomAction', roomId, {
+							type: 'setPermissions',
+							toUserId: e.detail.user,
+							permissions: e.detail.permissions
+						});
+					}}
+				/>
 
 				<div class="flex flex-col bg-white border-2 rounded-xl">
 					<Activity
