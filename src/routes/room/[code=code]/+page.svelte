@@ -150,7 +150,7 @@
 	<main
 		class="md:h-screen px-8 lg:px-20 py-12 max-w-screen-2xl mx-auto flex flex-col"
 	>
-		<div class="flex flex-wrap justify-between h-12">
+		<div class="flex flex-wrap justify-between md:h-12 mb-4 md:mb-0">
 			<p>
 				{$displayName}
 				&middot;
